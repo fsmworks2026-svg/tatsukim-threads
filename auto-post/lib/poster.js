@@ -26,7 +26,8 @@ export async function postToThreads(text) {
 
   const createData = await createRes.json();
   if (createData.error) {
-    throw new Error(`コンテナ作成エラー: ${createData.error.message}`);
+    const e = createData.error;
+    throw new Error(`コンテナ作成エラー: ${e.message} (code=${e.code}, subcode=${e.error_subcode ?? '-'}, type=${e.type ?? '-'})`);
   }
 
   // ステップ2: 非同期処理の完了を待つ（Meta推奨: 最低30秒）
