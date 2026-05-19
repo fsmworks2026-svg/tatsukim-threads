@@ -1,0 +1,38 @@
+name: 週次投稿ファイル自動生成
+
+on:
+  # 毎週日曜 22:00 JST (13:00 UTC) に実行
+  schedule:
+    - cron: '0 13 * * 0'
+  # 手動実行も可能
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Node.js セットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: 依存パッケージをインストール
+        run: npm install
+        working-directory: auto-post
+
+      - name: 週次投稿ファイルを生成
+        env:
+          AMAZON_ACCESS_KEY: ${{ secrets.AMAZON_ACCESS_KEY }}
+          AMAZON_SECRET_KEY: ${{ secrets.AMAZON_SECRET_KEY }}
+          AMAZON_PARTNER_TAG: ${{ secrets.AMAZON_PARTNER_TAG }}
+          GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node generate-weekly.js
+        working-directory: auto-post

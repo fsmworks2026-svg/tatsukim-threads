@@ -1,0 +1,14 @@
+{
+  "name": "tatsukim-threads-auto-post",
+  "version": "1.0.0",
+  "description": "たつきママ Threads自動投稿スケジューラー",
+  "type": "module",
+  "scripts": {
+    "generate": "node generate-weekly.js",
+    "post": "node post-once.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "paapi5-nodejs-sdk": "^1.0.0"
+  }
+}
