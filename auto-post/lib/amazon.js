@@ -5,7 +5,10 @@
  * APIキー未設定時はカテゴリ別の固定商品リスト（FALLBACK_PRODUCTS）からランダム選択する
  */
 
-import { DefaultApi, SearchItemsRequest, PartnerType, SearchItemsResource } from 'paapi5-nodejs-sdk';
+// paapi5-nodejs-sdk は CommonJS モジュールのため createRequire で読み込む
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { DefaultApi, SearchItemsRequest, PartnerType, SearchItemsResource } = require('paapi5-nodejs-sdk');
 
 // 週ごとにカテゴリをローテーションするための定義
 // 月曜・水曜・金曜の3スロット × 4週 = 12カテゴリパターン
@@ -173,7 +176,14 @@ export async function getTopRankedItem(category) {
     SearchItemsResource.DETAIL_PAGE_URL,
   ];
 
-  const data = await client.searchItems(request);
+  let data;
+  try {
+    data = await client.searchItems(request);
+  } catch (err) {
+    console.warn(`  ⚠️  PA-API 呼び出しエラー → [${category.label}] フォールバック商品を使用`);
+    return getFallbackItem(category, partnerTag);
+  }
+
   const items = data?.SearchResult?.Items;
 
   if (!items || items.length === 0) {
