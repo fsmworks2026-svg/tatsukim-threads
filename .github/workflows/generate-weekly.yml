@@ -4,8 +4,14 @@ on:
   # 毎週日曜 22:00 JST (13:00 UTC) に実行
   schedule:
     - cron: '0 13 * * 0'
-  # 手動実行も可能
+  # 手動実行も可能（current_week=true で今週分を生成）
   workflow_dispatch:
+    inputs:
+      current_week:
+        description: '今週分を生成する（テスト用）'
+        required: false
+        default: 'false'
+        type: string
 
 permissions:
   contents: write
@@ -13,6 +19,8 @@ permissions:
 jobs:
   generate:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: リポジトリをチェックアウト
@@ -34,5 +42,6 @@ jobs:
           AMAZON_PARTNER_TAG: ${{ secrets.AMAZON_PARTNER_TAG }}
           GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
+          GENERATE_CURRENT_WEEK: ${{ github.event.inputs.current_week || 'false' }}
         run: node generate-weekly.js
         working-directory: auto-post

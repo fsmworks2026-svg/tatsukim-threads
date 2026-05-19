@@ -38,14 +38,16 @@ const WEEKDAY_NAMES = ['日', '月', '火', '水', '木', '金', '土'];
 // ========== 日付ユーティリティ ==========
 
 /**
- * 来週の月曜日〜日曜日の Date 配列を返す
+ * 指定オフセット週の月曜日〜日曜日の Date 配列を返す
+ * offset=0: 今週, offset=1: 来週（デフォルト）
  */
-function getNextWeekDates() {
+function getWeekDates(offset = 1) {
   const today = new Date();
-  const dayOfWeek = today.getDay(); // 0=日, 1=月, ...
-  const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+  const dayOfWeek = today.getDay();
+  // 今週の月曜日を計算（日曜=0の場合は -6、それ以外は 1-dayOfWeek）
+  const daysToThisMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const monday = new Date(today);
-  monday.setDate(today.getDate() + daysUntilMonday);
+  monday.setDate(today.getDate() + daysToThisMonday + offset * 7);
   monday.setHours(0, 0, 0, 0);
 
   return Array.from({ length: 7 }, (_, i) => {
@@ -247,7 +249,8 @@ ${rows.join('\n')}
 async function main() {
   console.log('🚀 週次投稿ファイル生成を開始します...\n');
 
-  const dates = getNextWeekDates();
+  const generateCurrentWeek = process.env.GENERATE_CURRENT_WEEK === 'true';
+  const dates = getWeekDates(generateCurrentWeek ? 0 : 1);
   const weekNum = getWeekNumber();
   const categories = getWeeklyCategories();
 
