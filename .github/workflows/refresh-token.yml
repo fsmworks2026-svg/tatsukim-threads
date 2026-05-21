@@ -1,0 +1,35 @@
+name: Threads トークン自動更新
+
+on:
+  # 毎月1日 19:00 JST (10:00 UTC) に自動実行
+  schedule:
+    - cron: '0 10 1 * *'
+  # 手動実行も可能（トークン切れた時など）
+  workflow_dispatch:
+
+jobs:
+  refresh-token:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Threads アクセストークンを更新
+        env:
+          CURRENT_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          # 更新APIを呼ぶ
+          RESPONSE=$(curl -s "https://graph.threads.net/refresh_access_token?grant_type=th_refresh_token&access_token=${CURRENT_TOKEN}")
+          NEW_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token // empty')
+
+          # 失敗したら終了（GitHub Actions のジョブが赤くなって通知される）
+          if [ -z "$NEW_TOKEN" ]; then
+            echo "❌ トークン更新失敗。手動で再発行が必要です。"
+            echo "$RESPONSE"
+            exit 1
+          fi
+
+          # ログにトークンが漏れないようにマスク
+          echo "::add-mask::$NEW_TOKEN"
+
+          # GitHub Secret を上書き更新
+          gh secret set THREADS_ACCESS_TOKEN --body "$NEW_TOKEN" --repo "$GITHUB_REPOSITORY"
+          echo "✅ THREADS_ACCESS_TOKEN を更新しました"
